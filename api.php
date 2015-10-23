@@ -13,6 +13,7 @@ include 'crud.php';
 			$crud->selectAll($tbl);
 		}
 
+
 		if ($_REQUEST['action'] == 'show'){
 			$tbl = $_REQUEST['tbl'];
 			$id = intval($_REQUEST['id']);
@@ -31,4 +32,11 @@ include 'crud.php';
 		// 	$crud = new Crud();
 		// 	$crud->listResource($tbl);
 		// }
+	}
+	else if (!empty($_POST['action'])) {
+		if ($_POST['action'] == 'showAllData') {
+			// $tbl = $_REQUEST['resource'];
+			$crud = new Crud();
+			$crud->showAllData();
+		}
 	}

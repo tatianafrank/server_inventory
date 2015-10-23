@@ -20,3 +20,11 @@ table,td
 {
  border:solid #e9e9e9 1px;
 }
+
+th{
+	cursor: context-menu;
+	font-size: 22px;
+}
+td {
+	font-size: 20px;
+}

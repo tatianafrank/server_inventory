@@ -11,23 +11,87 @@ class Crud
 		if($params !== false) 
 		{
 		} else {
-				 return mysqli_query($_db, $sql);
+			return $_db->query($sql);
 		}
+	}
+
+	public static function showAllData() 
+	{
+		$sql = "SELECT server.address as server, project.name as project, client.name as client, domain.name as domain FROM project JOIN client on (project.client_id = client.id) LEFT JOIN domain on (domain.project_id = project.id)";
+
+
+		$results = self::fetchQuery($sql);
+		$fields = '';
+		$values = '';
+		$fieldCount = 0;
+		$valueCount = 0;
+
+		// var_dump($results);
+		foreach($results as $result=>$value){
+			
+			print_r($result);
+			print_r($value);
+			echo '</br>';
+		}
+
 	}
 
 	public static function selectAll($tbl)
 	{
 		$sql = "SELECT * FROM " . $tbl;
 		$results = self::fetchQuery($sql);
+		$fields = '';
+		$values = '';
+		$fieldCount = 0;
+		$valueCount = 0;
+
 		foreach($results as $result){
-			print_r($result);
+			foreach($result as $field=>$value)
+			{
+				if (strpos($fields, $field) == false) 
+				{
+					$fields .= '<th>' . $field . '</th>';
+					$fieldCount ++;
+				}
+				
+			}
+			foreach($result as $field=>$value)
+			{
+				$valueCount++;
+				if ($valueCount % $fieldCount == 0)
+				{
+					$values .= '<td contenteditable="true">' . $value . '</td></tr><tr>';
+				} 
+				else 
+				{
+					$values .= '<td contenteditable="true">' . $value . '</td>';
+				}
+			}
+
 		}
-		// var_dump($results);
+
+	$html = <<<EOT
+		<table id="mainTablee" class="tablesorter">
+			<thead>
+				<tr>
+					$fields
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					$values
+				</tr>
+			</tbody>
+		</table>
+EOT;
+
+	echo $html;
 	}
 
+
+	
+
 }
-
-
 
 // /* code for data insert */
 // if(isset($_POST['save']))
