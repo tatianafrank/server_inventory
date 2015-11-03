@@ -1,9 +1,8 @@
 #form
 {
  width:500px;
- 
  margin:0px auto;
- text-align:center;
+ text-align:left;
  
 }
 #form form input
@@ -27,4 +26,19 @@ th{
 }
 td {
 	font-size: 20px;
+}
+
+.resources, .actions {
+	display: inline;
+	margin: 20px;
+}
+
+.actionResource select{
+	font-size: 24px;
+}
+
+.formSubmit {
+	margin: 10px;
+	border: black 2px solid;
+  background: white;
 }
