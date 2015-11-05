@@ -11,13 +11,20 @@ class Crud
 		if($params !== false) 
 		{
 			if ($_db->query($sql) === TRUE) {
-    		echo '<script language="javascript">';
-				echo 'alert("New record created successfully")';
+	    	echo '<script language="javascript">';
+				if ($params == 'create') {
+					echo 'alert("New record created successfully")';
+				} 
+				else if ($params == 'update') {
+					echo 'alert("Record updated successfully")';
+				}
+				else if ($params == 'delete') {
+					echo 'alert("Record was archived successfully")';
+				}
 				echo '</script>';
 			} else {
-				echo '<script language="javascript">';
-				echo 'alert("Error: "' . $sql . '"<br>" . $_db->error)';
-				echo '</script>';
+				echo $sql . '</br>';
+				echo $_db->error;
 			    alert("Error: " . $sql . "<br>" . $_db->error);
 			}
 		} else {
@@ -29,22 +36,49 @@ class Crud
 	public static function create($formData, $tbl) {
 		$columns = '';
 		$values = '';
+		$i = 0;
 		foreach($formData as $field=>$val){
-			for($i=0; $i < count($formData); $i++) {
-				$columns .= $field . ($i > 1 ? ',' : '');
-				$values .= "'" . $val . "'" . ($i > 1 ? ',' : '');
-			}
+			$i++;
+				$columns .= $field . ($i >= 1 ? ($i < count($formData) ? ', ' : '') : '');
+				$values .= "'" . $val . "'" . ($i >= 1 ? ($i < count($formData) ? ', ' : '') : '');
 		}
 		$sql = <<<HTML
 			INSERT INTO $tbl ($columns) VALUES ($values)
 HTML;
-		// $sql = 'INSERT INTO ' .$tbl. ' (' .$columns. ') VALUES ('.$values.')';	
-		// $ssql = "INSERT INTO client (name) VALUES ('sara')";
+
 		// echo $sql . '<br>';
-		// echo $ssql;
 		self::fetchQuery($sql, 'create');
+	
 	}
 
+	public static function update($tbl, $params, $id) {
+		$i=0;
+		$columns = '';
+		$values = '';
+		$sq = '';
+		// var_dump($params);
+		foreach($params as $key=>$val) {
+			$i++;
+			if ($key == 'provider_id') {
+				$psq = 'SELECT id from provider where name =' .$val;
+				$pres = self::fetchQuery($psq);
+				while ($row = $pres->fetch_assoc()) {
+			    $val = $row['id'];
+				}
+			}
+			$sq .= $key .' = ' . $val . ($i< count($params) ? ', ' : '');
+		}
+		$sql = <<<HTML
+			UPDATE $tbl SET $sq WHERE id = $id
+HTML;
+		self::fetchQuery($sql, 'update');
+	// echo $sql;
+	}
+
+	public static function delete($tbl, $id) {
+		$sql = 'UPDATE ' . $tbl . ' SET published = 0 where id = '. $id;
+		self::fetchQuery($sql, 'delete');
+	}
 
 	public static function showAllData() 
 	{
@@ -60,9 +94,9 @@ HTML;
 		// var_dump($results);
 		foreach($results as $result=>$value){
 			
-			print_r($result);
-			print_r($value);
-			echo '</br>';
+			// print_r($result);
+			// print_r($value);
+			// echo '</br>';
 		}
 
 	}
@@ -70,67 +104,74 @@ HTML;
 
 	public static function selectAll($tbl)
 	{
-		$sql = "SELECT * FROM " . $tbl;
+		$sql = "SELECT * FROM " . $tbl . " WHERE published = 1";
 		$results = self::fetchQuery($sql);
 		$fields = '';
 		$values = '';
 		$fieldCount = 0;
 		$valueCount = 0;
+		$id = 0;
 
-		foreach($results as $result)
-		{
+		while ($result = $results->fetch_assoc()) {
 			foreach($result as $field=>$value)
 			{
-
-				if (strpos($field, "_id")){
-					if (strpos($fields, substr($field, 0, -3)) === false) 
-					{
-						$fields .= '<th>' . substr($field, 0, -3) . '</th>';
-					} 
-				} else {
-						if (strpos($fields, $field) === false) 
+				if (($field !== 'published') && ($field !== 'id'))  {
+					if (strpos($field, "_id")){
+						if (strpos($fields, substr($field, 0, -3)) === false) 
 						{
-							$fields .= '<th>' . $field . '</th>';
-						}
+							$fields .= '<th>' . substr($field, 0, -3) . '</th>';
+						} 
+					} else {
+							if (strpos($fields, $field) === false) 
+							{
+								$fields .= '<th>' . $field . '</th>';
+								if ($field == 'id') {
+									$id = $value;
+								}
+							}
+					}
+					
+					$fieldCount ++;
 				}
-				
-				$fieldCount ++;
-		}
+			}
 
 			foreach($result as $field=>$value)
 			{
-				$valueCount++;
-				if ($field == 'ip_id'){
-						$ssql = 'SELECT address FROM ip WHERE id ='. ($value > 0 ? : $value);
-						$address = self::fetchQuery($ssql);
-						foreach($address as $ad){
-							$value = $ad['address'];
-						}
-				}
-				elseif ($field == 'provider_id'){
-						$ssql = 'SELECT name FROM provider WHERE id ='. ($value > 0 ? : $value);
-						$name = self::fetchQuery($ssql);
-						foreach($name as $na){
-							$value = $na['name'];
-						}
-				}
-				if ($valueCount % $fieldCount == 0)
-				{
-					$values .= '<td contenteditable="true">' . $value . '</td></tr><tr>';
-				} 
-				else 
-				{
-					$values .= '<td contenteditable="true">' . $value . '</td>';
+				if (($field !== 'published') && ($field !== 'id')) {
+					$valueCount++;
+					if ($field == 'provider_id'){
+							$ssql = 'SELECT name FROM provider WHERE id ='. ($value > 0 ? : $value);
+							$name = self::fetchQuery($ssql);
+							foreach($name as $na){
+								$value = $na['name'];
+							}
+					}
+					if ($valueCount % $fieldCount == 0)
+					{
+
+						$values .= <<<HTML
+						<td contenteditable="false" data-field="$field" data-id="$id">$value</td><td class="edit"><button>EDIT</button></td><td class="save"><button>SAVE</button></td><td class="delete"><button>DELETE</button></td></tr><tr>
+HTML;
+					} 
+					else 
+					{
+						$values .= <<<HTML
+						<td contenteditable="false" data-field="$field" data-id="$id" >$value</td>
+HTML;
+					}
 				}
 			}
 		}
 
-		self::htmlBuilder($fields, $values);
+
+
+
+		self::htmlBuilder($fields, $values, $tbl);
 
 	}
 
 	public static function getForm($resource) {
-		$tbl = $resource;
+		$tbl = $resource; 
 		$sql = 'SHOW COLUMNS FROM ' . $tbl;
 		$results = self::fetchQuery($sql);
 		$fields='';
@@ -139,24 +180,28 @@ HTML;
 			$hasId = strpos($field, 'id');
 			$has_id = strpos($field, '_id');
 			$options = '';
-		  	if (($hasId === false) && ($has_id === false)){
+			$shortField = substr($field, 0, -3);
+
+				if ($field == 'we_host') {
+					$fields .= 'Hosted by us?: <select name="we_host"><option value="true">True</option><option value="false">False</option></select></br>';
+				}
+
+		  	if (($hasId === false) && ($has_id === false) && ($field !=='we_host')){
 					$fields .= $field .':<input type="text" name="'. $field .'">' . '<br>';
 				}
 				else if($has_id !== false) {
-					$sql = 'SELECT name FROM ' . substr($field, 0, -3); 
+					$sql = 'SELECT name, id FROM ' . $shortField; 
 					$results = self::fetchQuery($sql);
 					foreach($results as $result) {
-
-						$options .= '<option>'. $result['name'] .'</option>';
+						$options .= '<option value="'. $result['id'] .'">'. $result['name'] .'</option>';
 					}
-					$fields .= substr($field, 0, -3) .': <select>'. $options .'</select><br>';
+					$fields .= $shortField .': <select name="'. $field .'">'. $options .'</select><br>';
 				}
-			// $fields[] .= $result['Field'];
 		}
 		self::formBuilder($fields, $tbl);
 	}
 
-
+//Builds HTML for Create action form
 	public static function formBuilder($fields, $tbl) {
 		$formName = $tbl . "Form";
 		$html = <<<EOT
@@ -167,10 +212,10 @@ EOT;
 	echo $html;
 	}
 
-
-	public static function htmlBuilder($fields, $values) {
+//Builds database table HTML 
+	public static function htmlBuilder($fields, $values, $tbl) {
 		$html = <<<EOT
-			<table id="mainTablee" class="tablesorter">
+			<table id="mainTable" class="tablesorter" data-table="$tbl">
 				<thead>
 					<tr>
 						$fields

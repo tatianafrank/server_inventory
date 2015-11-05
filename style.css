@@ -42,3 +42,6 @@ td {
 	border: black 2px solid;
   background: white;
 }
+button {
+	width: 100px;
+}

@@ -14,6 +14,21 @@ include 'crud.php';
 			$crud->selectAll($tbl);
 		}
 
+		elseif ($_REQUEST['action'] == 'update') {
+			$tbl = $_REQUEST['resource'];
+			$params = $_REQUEST['params'];
+			$id = $_REQUEST['id'];
+			$crud = new Crud();
+			$crud->update($tbl, $params, $id);
+		}
+
+		elseif ($_REQUEST['action'] == 'delete') {
+			$tbl = $_REQUEST['resource'];
+			$id = $_REQUEST['id'];
+			$crud = new Crud();
+			$crud->delete($tbl, $id);
+		}
+
 		elseif ($_REQUEST['action'] == 'getForm') {
 			$tbl = $_REQUEST['resource'];
 			$crud = new Crud();

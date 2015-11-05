@@ -16,7 +16,7 @@ include 'api.php';
 			<br />
 			<div class="createMessage">
 			</div>
-			<div id="mainTable">
+			<div id="tableWrapper">
 
 			</div>
 			<br><br>
