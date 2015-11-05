@@ -110,12 +110,14 @@ HTML;
 		$values = '';
 		$fieldCount = 0;
 		$valueCount = 0;
-		$id = 0;
 
 		while ($result = $results->fetch_assoc()) {
 			foreach($result as $field=>$value)
 			{
-				if (($field !== 'published') && ($field !== 'id'))  {
+				if ($field == 'id') {
+					$id = $value;
+				}
+				else if ($field !== 'published')  {
 					if (strpos($field, "_id")){
 						if (strpos($fields, substr($field, 0, -3)) === false) 
 						{
@@ -125,9 +127,7 @@ HTML;
 							if (strpos($fields, $field) === false) 
 							{
 								$fields .= '<th>' . $field . '</th>';
-								if ($field == 'id') {
-									$id = $value;
-								}
+								
 							}
 					}
 					
@@ -139,13 +139,21 @@ HTML;
 			{
 				if (($field !== 'published') && ($field !== 'id')) {
 					$valueCount++;
-					if ($field == 'provider_id'){
-							$ssql = 'SELECT name FROM provider WHERE id ='. ($value > 0 ? : $value);
-							$name = self::fetchQuery($ssql);
-							foreach($name as $na){
-								$value = $na['name'];
+
+					if (strpos($field, "_id")){
+						if ($value > 0) {
+							$fsql = "SELECT name from " . substr($field, 0, -3) . " WHERE id =". ($value > 0 ? : $value);
+							$name = self::fetchQuery($fsql);
+							while ($row = $name->fetch_assoc()) {
+						    $value = $row['name'];
 							}
+						}
+
 					}
+
+				
+
+				
 					if ($valueCount % $fieldCount == 0)
 					{
 
