@@ -10,8 +10,9 @@ include 'crud.php';
 	if (!empty($_REQUEST['action']) && !empty($_REQUEST['resource'])) {
 		if ($_REQUEST['action'] == 'selectAll') {
 			$tbl = $_REQUEST['resource'];
+			$page = $_REQUEST['action'];
 			$crud = new Crud();
-			$crud->selectAll($tbl);
+			$crud->selectAll($tbl, $page);
 		}
 
 		elseif ($_REQUEST['action'] == 'update') {

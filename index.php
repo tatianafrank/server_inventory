@@ -16,24 +16,17 @@ include 'api.php';
 			<br />
 			<div class="createMessage">
 			</div>
+			<ul id="navigation"> <!-- the navigation menu -->
+				<li><a class="selects" href="#selectAll" value="server">Servers</a></li> <!-- a few navigation buttons -->
+				<li><a class="selects" href="#selectAll" value="client">Clients</a></li>
+				<li><a class="selects" href="#selectAll" value="project">Projects</a></li>
+			</ul>
+		
 			<div id="tableWrapper">
 
 			</div>
-			<br><br>
-			<!-- <div class="actions">
-				<select class="actionDropdown">
-					<option>
-						Create
-					</option>
-				</select>
-			</div>
-			<div class="resources">
-				<select class="resourceDropdown">
-					<option>
-						Server
-					</option>
-				</select>
-			</div> -->
+
+
 	<p>
     <form class="actionResource">
       <select id="resourceSelect" class="resourceSelect">
@@ -50,11 +43,9 @@ include 'api.php';
       </select> 
     </form>
   </p>
-  
+
   <p>
   	<div class="formWrapper">
-  		<form class="form">
-  		</form>
   	</div>
   </p>
 		</center>

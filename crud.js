@@ -1,11 +1,10 @@
 window.server = {
 	ready : function(){
 		var self = this;
+		lasturl="";	//here we store the current URL hash
 		crudAction = '';
 		crudResource = '';
-		$('#resourceSelect').on("change", this.crud.setResource.bind(this.crud));
-		$('#actionSelect').on("change", this.crud.setAction.bind(this.crud));
-		this.crud.selectAll('server');
+
 		$('.form').on("submit", this.crud.submitForm.bind(this.crud));
 		$('#tableWrapper').on("click", '.edit',  function(e){
 			self.crud.edit(e);
@@ -16,17 +15,57 @@ window.server = {
 		$('#tableWrapper').on("click", '.delete',  function(e){
 			self.crud.delete(e);
 		});
+
+		//new event handlers
+	// this.crud.checkURL();	//check if the URL has a reference to a page and load it
+	// setInterval("this.crud.checkURL()",250);	//check for a change in the URL every 250 ms to detect if the history buttons have been used
+	$('a.selects').click(function (e){	//traverse through all our navigation links..
+			self.crud.checkURL(e);	//.. and assign them a new onclick event, using their own hash as a parameter (#page1 for example)
+	
+	});
+
+	$('#tableWrapper').on("click", '.addNew', function(e){
+		self.crud.checkURL(e);
+	});
+
+	$('#tableWrapper').on("click", '.formSubmit', function(e){
+		self.crud.submitForm(e);
+	});
+
+		//end of new event handlers
+
 	},
+
 	status: false,
 	crud : {
+
+		//NEW functions
+
+
+		checkURL: function(e){
+			var hash = $(event.target).attr('href');
+			if(hash != lasturl)	// if the hash value has changed
+			{
+	  		lasturl=hash.replace('#','');
+				this.setResource(e);
+
+			}
+		},
+
+		//end of NEW functions
+
+
 		setResource: function(e){
-			crudResource = $(e.currentTarget).val();
+			crudResource = $(event.target).attr('value');
+			crudAction = lasturl;
 			if (crudAction !== ''){
 				this[crudAction](crudResource);
+
 			}
 		},
 		setAction: function(e){
-			crudAction = $(e.currentTarget).val();
+			crudAction = lasturl;
+			console.log(crudAction);
 			this[crudAction](crudResource);			
 		},
 		edit: function(e) {
@@ -68,6 +107,10 @@ window.server = {
 
 			var post = $.post( "api.php", { resource: crudResource, action: crudAction, params: params, id: id}); 
 			post.done(function(result){
+
+				
+
+
 				$( "#tableWrapper" ).html( result );
 				if($('#tableWrapper').html() !== ""){
 					$("#mainTable").tablesorter();
@@ -91,7 +134,7 @@ window.server = {
 			if (rsc !== "") {
 				var post = $.post( "api.php", { resource: rsc, action: 'getForm' }); 
 				post.done(function(result){
-					$( ".form" ).html( result );
+					$( "#tableWrapper" ).html( result );
 
 				});
 			}
@@ -105,26 +148,40 @@ window.server = {
 			$.each($('.form').serializeArray(), function(i, field) {
 			    values[field.name] = field.value;
 			});
+			console.log(values);
 			var post = $.post( "api.php", { action: 'create', data: values, resource: $rsc });
 			post.done(function(result){
-				$( ".createMessage" ).html( result );
+				alert(result);
 			});
 		},
 
-		selectAll: function (rsc) { //formerly listresource
+		selectAll: function (rsc) { 
 			if (rsc == "") {
 				$('#tableWrapper').html("");
 
 	    	return;
 	  	} else { 
 
+
 		    var post = $.post( "api.php", { resource: rsc, action: 'selectAll' }); 
 				post.done(function(result){
-					$( "#tableWrapper" ).html( result );
+
+					//original
+					// $( "#tableWrapper" ).html( result );
+					//original
+
+					//new ajax
+
+					if(parseInt(result)!=0)	//if no errors
+					{
+						$('#tableWrapper').html(result);	//load the returned html into pageContet
+					}
+					//new ajax
 
 					if($('#tableWrapper').html() !== ""){
 						$("#mainTable").tablesorter();
 					}
+
 
 				});
 			}

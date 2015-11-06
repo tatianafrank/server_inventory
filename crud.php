@@ -1,6 +1,8 @@
 <?php
 
 include_once 'dbconfig.php';
+include_once 'templates/selectAll.php';
+include_once 'templates/getForm.php';
 
 class Crud 
 {
@@ -11,21 +13,18 @@ class Crud
 		if($params !== false) 
 		{
 			if ($_db->query($sql) === TRUE) {
-	    	echo '<script language="javascript">';
 				if ($params == 'create') {
-					echo 'alert("New record created successfully")';
+					echo 'New record created successfully';
 				} 
 				else if ($params == 'update') {
-					echo 'alert("Record updated successfully")';
+					echo 'Record updated successfully';
 				}
 				else if ($params == 'delete') {
-					echo 'alert("Record was archived successfully")';
+					echo 'Record was archived successfully';
 				}
-				echo '</script>';
 			} else {
-				echo $sql . '</br>';
-				echo $_db->error;
-			    alert("Error: " . $sql . "<br>" . $_db->error);
+				echo "Error: " . $sql . "<br>" . $_db->error;
+				
 			}
 		} else {
 			return $_db->query($sql);
@@ -39,9 +38,11 @@ class Crud
 		$i = 0;
 		foreach($formData as $field=>$val){
 			$i++;
-				$columns .= $field . ($i >= 1 ? ($i < count($formData) ? ', ' : '') : '');
-				$values .= "'" . $val . "'" . ($i >= 1 ? ($i < count($formData) ? ', ' : '') : '');
+				$columns .= $field . ',';
+				$values .= "'" . $val . "'" . ',';
 		}
+		$columns .= 'published';
+		$values .= '1';
 		$sql = <<<HTML
 			INSERT INTO $tbl ($columns) VALUES ($values)
 HTML;
@@ -56,7 +57,7 @@ HTML;
 		$columns = '';
 		$values = '';
 		$sq = '';
-		// var_dump($params);
+
 		foreach($params as $key=>$val) {
 			$i++;
 			if ($key == 'provider_id') {
@@ -80,165 +81,40 @@ HTML;
 		self::fetchQuery($sql, 'delete');
 	}
 
-	public static function showAllData() 
-	{
-		$sql = "SELECT server.address as server, project.name as project, client.name as client, domain.name as domain FROM project JOIN client on (project.client_id = client.id) LEFT JOIN domain on (domain.project_id = project.id)";
-
-
-		$results = self::fetchQuery($sql);
-		$fields = '';
-		$values = '';
-		$fieldCount = 0;
-		$valueCount = 0;
-
-		// var_dump($results);
-		foreach($results as $result=>$value){
-			
-			// print_r($result);
-			// print_r($value);
-			// echo '</br>';
-		}
-
-	}
-
-
-	public static function selectAll($tbl)
+	public static function selectAll($tbl, $page)
 	{
 		$sql = "SELECT * FROM " . $tbl . " WHERE published = 1";
 		$results = self::fetchQuery($sql);
-		$fields = '';
-		$values = '';
-		$fieldCount = 0;
-		$valueCount = 0;
-
-		while ($result = $results->fetch_assoc()) {
-			foreach($result as $field=>$value)
-			{
-				if ($field == 'id') {
-					$id = $value;
-				}
-				else if ($field !== 'published')  {
-					if (strpos($field, "_id")){
-						if (strpos($fields, substr($field, 0, -3)) === false) 
-						{
-							$fields .= '<th>' . substr($field, 0, -3) . '</th>';
-						} 
-					} else {
-							if (strpos($fields, $field) === false) 
-							{
-								$fields .= '<th>' . $field . '</th>';
-								
-							}
-					}
-					
-					$fieldCount ++;
-				}
-			}
-
-			foreach($result as $field=>$value)
-			{
-				if (($field !== 'published') && ($field !== 'id')) {
-					$valueCount++;
-
-					if (strpos($field, "_id")){
-						if ($value > 0) {
-							$fsql = "SELECT name from " . substr($field, 0, -3) . " WHERE id =". ($value > 0 ? : $value);
-							$name = self::fetchQuery($fsql);
-							while ($row = $name->fetch_assoc()) {
-						    $value = $row['name'];
-							}
-						}
-
-					}
-
-				
-
-				
-					if ($valueCount % $fieldCount == 0)
-					{
-
-						$values .= <<<HTML
-						<td contenteditable="false" data-field="$field" data-id="$id">$value</td><td class="edit"><button>EDIT</button></td><td class="save"><button>SAVE</button></td><td class="delete"><button>DELETE</button></td></tr><tr>
-HTML;
-					} 
-					else 
-					{
-						$values .= <<<HTML
-						<td contenteditable="false" data-field="$field" data-id="$id" >$value</td>
-HTML;
-					}
-				}
-			}
-		}
-
-
-
-
-		self::htmlBuilder($fields, $values, $tbl);
-
+		$html = selectAllBuilder($results, $tbl);;
+		return $html;
 	}
 
 	public static function getForm($resource) {
 		$tbl = $resource; 
 		$sql = 'SHOW COLUMNS FROM ' . $tbl;
 		$results = self::fetchQuery($sql);
-		$fields='';
-		foreach($results as $result){
-			$field = $result['Field'];
-			$hasId = strpos($field, 'id');
-			$has_id = strpos($field, '_id');
-			$options = '';
-			$shortField = substr($field, 0, -3);
-
-				if ($field == 'we_host') {
-					$fields .= 'Hosted by us?: <select name="we_host"><option value="true">True</option><option value="false">False</option></select></br>';
-				}
-
-		  	if (($hasId === false) && ($has_id === false) && ($field !=='we_host')){
-					$fields .= $field .':<input type="text" name="'. $field .'">' . '<br>';
-				}
-				else if($has_id !== false) {
-					$sql = 'SELECT name, id FROM ' . $shortField; 
-					$results = self::fetchQuery($sql);
-					foreach($results as $result) {
-						$options .= '<option value="'. $result['id'] .'">'. $result['name'] .'</option>';
-					}
-					$fields .= $shortField .': <select name="'. $field .'">'. $options .'</select><br>';
-				}
-		}
-		self::formBuilder($fields, $tbl);
+		
+		return formBuilder($results, $tbl);
 	}
 
-//Builds HTML for Create action form
-	public static function formBuilder($fields, $tbl) {
-		$formName = $tbl . "Form";
-		$html = <<<EOT
-		$fields
-		<input id="$formName" class="formSubmit" type="submit">
-EOT;
+	// 	public static function showAllData() 
+	// {
+	// 	$sql = "SELECT server.address as server, project.name as project, client.name as client, domain.name as domain FROM project JOIN client on (project.client_id = client.id) LEFT JOIN domain on (domain.project_id = project.id)";
 
-	echo $html;
-	}
 
-//Builds database table HTML 
-	public static function htmlBuilder($fields, $values, $tbl) {
-		$html = <<<EOT
-			<table id="mainTable" class="tablesorter" data-table="$tbl">
-				<thead>
-					<tr>
-						$fields
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						$values
-					</tr>
-				</tbody>
-			</table>
-EOT;
+	// 	$results = self::fetchQuery($sql);
+	// 	$fields = '';
+	// 	$values = '';
+	// 	$fieldCount = 0;
+	// 	$valueCount = 0;
 
-		echo $html;
-	}
-	
+	// 	// var_dump($results);
+	// 	foreach($results as $result=>$value){
+			
+	// 		// print_r($result);
+	// 		// print_r($value);
+	// 		// echo '</br>';
+	// 	}
+	// }
 
 } //end of crud class
