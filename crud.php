@@ -60,14 +60,24 @@ HTML;
 
 		foreach($params as $key=>$val) {
 			$i++;
-			if ($key == 'provider_id') {
-				$psq = 'SELECT id from provider where name =' .$val;
-				$pres = self::fetchQuery($psq);
-				while ($row = $pres->fetch_assoc()) {
-			    $val = $row['id'];
+
+			if (strpos($key, "_id") > 0){
+				if ($val !=='') {
+					$isql = "SELECT id from " . substr($key, 0, -3) . " WHERE name =". $val;
+					$ires = crud::fetchQuery($isql);
+					while ($row = $ires->fetch_assoc()) {
+				    $val = $row['id'];
+					}
 				}
 			}
-			$sq .= $key .' = ' . $val . ($i< count($params) ? ', ' : '');
+			// if ($key == 'provider_id') {
+			// 	$psq = 'SELECT id from provider where name =' .$val;
+			// 	$pres = self::fetchQuery($psq);
+			// 	while ($row = $pres->fetch_assoc()) {
+			//     $val = $row['id'];
+			// 	}
+			// }
+			$sq .= $key .' = ' . $val . ($i < count($params) ? ', ' : '');
 		}
 		$sql = <<<HTML
 			UPDATE $tbl SET $sq WHERE id = $id

@@ -14,6 +14,10 @@
 .createInput {
 	margin: 10px;
 }
+.selects a{
+	width: 50px;
+}
+
 #form form input
 {
  width:100%;

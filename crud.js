@@ -20,8 +20,7 @@ window.server = {
 	// this.crud.checkURL();	//check if the URL has a reference to a page and load it
 	// setInterval("this.crud.checkURL()",250);	//check for a change in the URL every 250 ms to detect if the history buttons have been used
 	$('a.selects').click(function (e){	//traverse through all our navigation links..
-			self.crud.checkURL(e);	//.. and assign them a new onclick event, using their own hash as a parameter (#page1 for example)
-	
+			self.crud.checkURL(e);	//.. and assign them a new onclick event, using their own hash as a parameter (#page1 for example)	
 	});
 
 	$('#tableWrapper').on("click", '.addNew', function(e){
@@ -65,7 +64,6 @@ window.server = {
 		},
 		setAction: function(e){
 			crudAction = lasturl;
-			console.log(crudAction);
 			this[crudAction](crudResource);			
 		},
 		edit: function(e) {
@@ -85,20 +83,26 @@ window.server = {
 			var params = {};
 			var id = 0;
 			$(e.currentTarget.parentNode).find('td').each(function(i, tdd){
-				id = $(tdd).data('id');
-				if (id > 0) {
+				if ($(tdd).data('id') > 0) {
+					id = $(tdd).data('id');
 					var field = $(tdd).data('field');
 					var value = $(tdd).html();
+					var dropdown = $(tdd).data('dropdown');
 					if ($(tdd).html() != '' && field != 'id'){
-						if (Number.isInteger(value) === true) {
-							params[field] = value;
+						if (dropdown > 0) {
+							value = $(tdd).find('option:selected').html();
+							console.log($(tdd).html());
 						}
-						else {
-							params[field] = '"' + value + '"';
+						else {		
+							if (Number.isInteger(value) === true) {
+								params[field] = value;
+							}
+							else {
+								params[field] = '"' + value + '"';
+							}
 						}
 					}
 				}
-				console.log(id);
 			});
 			params['published'] = 1;
 			
@@ -158,10 +162,8 @@ window.server = {
 		selectAll: function (rsc) { 
 			if (rsc == "") {
 				$('#tableWrapper').html("");
-
 	    	return;
 	  	} else { 
-
 
 		    var post = $.post( "api.php", { resource: rsc, action: 'selectAll' }); 
 				post.done(function(result){
@@ -181,7 +183,6 @@ window.server = {
 					if($('#tableWrapper').html() !== ""){
 						$("#mainTable").tablesorter();
 					}
-
 
 				});
 			}

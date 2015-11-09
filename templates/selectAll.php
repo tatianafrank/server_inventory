@@ -37,14 +37,29 @@ while ($result = $results->fetch_assoc()) {
 			{
 				if (($field !== 'published') && ($field !== 'id')) {
 					$valueCount++;
-
-					if (strpos($field, "_id")){
+					$dropdown = false;
+					if (strpos($field, '_id') > 0){
+						$dropdown = true;
 						if ($value > 0) {
-							$fsql = "SELECT name from " . substr($field, 0, -3) . " WHERE id =". ($value > 0 ? : $value);
-							$name = crud::fetchQuery($fsql);
-							while ($row = $name->fetch_assoc()) {
-						    $value = $row['name'];
+							$fsql = "SELECT name from " . substr($field, 0, -3) . " WHERE id =". $value;
+							$nameQuery = crud::fetchQuery($fsql);
+							$name='';
+							$optionsHtml='';
+							while ($row = $nameQuery->fetch_assoc()) {
+						    // $value = $row['name'];
+						    $name = $row['name'];
 							}
+							$asql = "SELECT name, id FROM " . substr($field, 0, -3);
+							$options = crud::fetchQuery($asql);
+							while ($row = $options->fetch_assoc()) {
+								$optionsHtml .= '<option value="'. $row['id'] .'">' . $row['name'] . '</option>';
+							}
+							$value = <<<HTML
+							<select>
+								<option>$name</option>
+								$optionsHtml
+							</select>
+HTML;
 						}
 
 					}
@@ -53,13 +68,13 @@ while ($result = $results->fetch_assoc()) {
 					if ($valueCount % $fieldCount == 0)
 					{
 						$values .= <<<HTML
-						<td contenteditable="false" data-field="$field" data-id="$id">$value</td><td class="edit"><button>EDIT</button></td><td class="save"><button>SAVE</button></td><td class="delete"><button>DELETE</button></td></tr><tr>
+						<td contenteditable="false" data-dropdown="$dropdown" data-field="$field" data-id="$id">$value</td><td class="edit"><button>EDIT</button></td><td class="save"><button>SAVE</button></td><td class="delete"><button>DELETE</button></td></tr><tr>
 HTML;
 					} 
 					else 
 					{
 						$values .= <<<HTML
-						<td contenteditable="false" data-field="$field" data-id="$id" >$value</td>
+						<td contenteditable="false" data-dropdown="$dropdown" data-field="$field" data-id="$id" >$value</td>
 HTML;
 					}
 				}
